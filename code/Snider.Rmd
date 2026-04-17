@@ -1,0 +1,80 @@
+---
+title: "Radiation"
+author: "Matheus Ardigueri"
+date: "2026-04-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+df_snider <- read_excel("./data/TIFTONRADIATION.xls")
+
+df_snider
+```
+
+```{r}
+rad_filt <- df_snider %>%
+  filter(Year == 2025) %>%
+  mutate(Date = as.Date(Date)) %>%
+   filter(Date >= as.Date("2025-05-01") & Date <= as.Date("2025-09-25")) %>%
+  clean_names()
+
+```
+
+```{r}
+rad_plot <- ggplot(rad_filt,
+                   aes(x = date,
+                       y = total_solar_radiation_mj_m_2)) +
+  labs(
+    x = "Months",
+    y = "Total Solar Radiation MJ/m²"
+  ) +
+  geom_line()
+
+ggsave(filename = "./output/rad_plot.png",
+        plot = rad_plot,
+       dpi = 600)
+```
+
+```{r}
+rad_cum <- rad_filt %>%
+  mutate(cum_srad = cumsum(total_solar_radiation_mj_m_2), .before = date)
+```
+
+```{r}
+cum_plot <- ggplot(data = rad_cum,
+                   aes(x = date,
+                        y=cum_srad)) +
+  geom_line() +
+  labs(
+    x = "Months",
+    y = "Cummulative Solar Radiation MJ/m² "
+  )
+
+ggsave(filename = "./output/cum_rad.png",
+      plot = cum_plot,
+      dpi = 600)
+```
+

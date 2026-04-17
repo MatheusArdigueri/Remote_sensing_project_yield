@@ -1,0 +1,98 @@
+---
+title: "Lacerda_project"
+author: "Matheus Ardigueri"
+date: "2026-04-17"
+output: html_document
+---
+
+# Importing Libraries and setting up
+
+```{r}
+library(tidyr)
+library(tidyverse)
+library(tidymodels)
+library(ggplot2)
+library(dplyr)
+library(janitor)
+library(readxl)
+library(lme4)
+library(performance)
+```
+
+## Importing dataframe
+
+```{r}
+df <- read_csv("../data/plots_csv.csv")
+
+names(df)
+```
+```{r}
+df
+```
+
+
+## EDA
+
+
+```{r}
+df_long <- df %>%
+  pivot_longer(c(NDVI, SAVI),
+               names_to = "indices",
+               values_to = "values")
+
+indices <- ggplot(data =  df_long, 
+                  aes(x = Date,
+                      y = values,
+                      color = indices)) +
+  geom_boxplot() +
+  labs(
+    x = "Dates",
+    y = "Index Values"
+  ) +
+  theme(
+    legend.title = element_blank(),
+    legend.position = c(0.9,0.9))
+
+indices
+
+ggsave(filename = "../output/boxplot_eda.png",
+       plot = indices,
+       dpi = 600)
+```
+
+
+```{r}
+linmod <- lmer(Yield ~ NDVI + SAVI + Elevation + (1|Rep),
+               data = df)
+
+summary(linmod)
+```
+
+
+```{r}
+# R²
+r2(linmod)
+
+# RMSE (with random effects)
+rmse(df$Yield, predict(linmod))
+
+# RMSE (fixed effects only)
+rmse(df$Yield, predict(linmod, re.form = NA))
+```
+
+```{r}
+df$pred <- predict(linmod)
+
+ggplot(df, aes(x = Yield, y = pred)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = 2) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    x = "Observed Yield",
+    y = "Predicted Yield",
+    title = "Observed vs Predicted Yield"
+  ) +
+  theme_minimal()
+```
+
+
