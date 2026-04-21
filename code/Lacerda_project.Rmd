@@ -60,6 +60,42 @@ ggsave(filename = "../output/boxplot_eda.png",
        dpi = 600)
 ```
 
+```{r}
+names(df_long)
+df_group <- df_long %>%
+  group_by(Date,id,indices,values) %>%
+  summarise(mean_vi_values = mean(values))
+
+
+boxplot_final <- ggplot(data = df_group,
+       aes(x = as.factor(Date),
+            y = mean_vi_values
+           )) +
+  geom_boxplot() +
+  labs(
+    x = "Date",
+    y = "Mean Index Value"
+  )+
+  facet_wrap(~indices) +
+  theme(
+    axis.title.x =  element_text(color = "black", size = 28),
+    axis.title.y =  element_text(color = "black", size = 28),
+    axis.text.x =  element_text(color = "black", size = 28),
+    axis.text.y =  element_text(color = "black", size = 28),
+    strip.text = element_text(color ="black", size = 28)
+  )
+
+ggsave(
+  filename = "../output/boxplot_final.png",
+  plot = boxplot_final,
+  dpi = 600,
+  height = 15,
+  width = 15
+)
+
+
+```
+
 
 ```{r}
 linmod <- lmer(Yield ~ NDVI + SAVI + Elevation + (1|Rep),
@@ -71,10 +107,9 @@ summary(linmod)
 
 ```{r}
 # R²
-r2(linmod)
+r2_vals <- r2(linmod)
 
 # RMSE (with random effects)
-rmse(df$Yield, predict(linmod))
 
 # RMSE (fixed effects only)
 rmse(df$Yield, predict(linmod, re.form = NA))
@@ -82,17 +117,46 @@ rmse(df$Yield, predict(linmod, re.form = NA))
 
 ```{r}
 df$pred <- predict(linmod)
+```
 
-ggplot(df, aes(x = Yield, y = pred)) +
-  geom_point(alpha = 0.5) +
+```{r}
+
+
+lin_reg <- ggplot(df, aes(x = Yield, y = pred)) +
+    geom_point(alpha = 0.5) +
   geom_abline(slope = 1, intercept = 0, color = "red", linetype = 2) +
   geom_smooth(method = "lm", se = FALSE, color = "blue") +
   labs(
     x = "Observed Yield",
     y = "Predicted Yield",
-    title = "Observed vs Predicted Yield"
   ) +
-  theme_minimal()
+  annotate(
+    "text",
+    x = max(df$Yield, na.rm = TRUE) * 0.75,
+    y = min(df$pred, na.rm = TRUE) + 0.1 * diff(range(df$pred, na.rm = TRUE)),
+    label = paste0(
+      "Marginal R² = ", round(r2_vals$R2_marginal, 3), "\n",
+      "Conditional R² = ", round(r2_vals$R2_conditional, 3), "\n",
+      "Yield = 328967.73 - 26.28*NDVI", "\n",
+      " + 617.80*SAVI - 2305.39*Elevation"
+    ),
+    hjust = 0,
+    size = 9
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.title.x = element_text(size = 28, color = "black"),
+    axis.title.y = element_text(size = 28, color = "black"),
+    axis.text.x = element_text(size = 28, color = "black"),
+    axis.text.y = element_text(size = 28, color = "black")
+  )
+
+ggsave(filename = "../output/lin_reg.png",
+       lin_reg,
+       dpi = 600,
+       height = 14,
+       width = 19)
 ```
 
 
