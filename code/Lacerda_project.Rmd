@@ -61,6 +61,72 @@ ggsave(filename = "../output/boxplot_upd_eda.png",
 ```
 
 ```{r}
+vi_summary <- df_long %>%
+  group_by(Date, indices, Ntreat) %>%
+  summarise(
+    mean_value = mean(values, na.rm = TRUE),
+    se = sd(values, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+temp <- ggplot(vi_summary, aes(x = Date, y = mean_value, color = Ntreat, group = interaction(Ntreat))) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ indices, scales = "free_y") +
+  labs(
+    x = "Date",
+    y = "Mean VIs Values",
+    color = "Nitrogen Treatment"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(filename="../output/temp_anal.png",
+       plot = temp,
+       dpi = 600,
+       height = 8,
+       width = 8)
+```
+
+```{r}
+df
+```
+
+```{r}
+
+biomass <- ggplot(df, 
+                  aes(x = Date,
+                      y = Biomass, 
+                      color = Ntreat)) +
+    geom_boxplot() +
+  labs(
+    x = "Sampled Dates",
+    y = "Fresh Biomass (g)"
+  ) +
+  theme(
+    axis.title.x =  element_text(color = "black", size = 28),
+    axis.title.y =  element_text(color = "black", size = 28),
+    axis.text.x =  element_text(color = "black", size = 28),
+    axis.text.y =  element_text(color = "black", size = 28),
+    strip.text = element_text(color ="black", size = 28)
+  )
+
+biomass
+
+ggsave(
+  filename = "../output/biomass.png",
+  plot = biomass,
+  dpi = 600,
+  height = 15,
+  width = 15
+)
+
+```
+
+```{r}
 names(df_long)
 df_group <- df_long %>%
   group_by(Date,id,indices,values) %>%
@@ -101,6 +167,83 @@ plot_elevation <- ggplot(df
   geom_
 ```
 
+```{r}
+lin_bio <- lmer(Biomass ~ SAVI + NDRE + NDVI + (1|Rep),
+                data = df)
+
+summary(lin_bio)
+
+r2_vals2 <- r2(lin_bio)
+
+r2_vals2
+```
+```{r}
+df_bio <- df %>%
+  drop_na(Biomass, SAVI, NDRE, NDVI, Rep)
+
+lin_bio <- lmer(
+  Biomass ~ SAVI + NDRE + NDVI + (1 | Rep),
+  data = df_bio
+)
+
+summary(lin_bio)
+
+r2_vals2 <- r2(lin_bio)
+r2_vals2
+
+# Add predictions safely
+df_bio$pred2 <- predict(lin_bio)
+
+# Plot observed vs predicted
+lin_bio_plot <- ggplot(df_bio, aes(x = Biomass, y = pred2)) +
+  geom_point(alpha = 0.5, size = 3) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    color = "red",
+    linetype = 2
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "blue"
+  ) +
+  labs(
+    x = "Observed Biomass",
+    y = "Predicted Biomass"
+  ) +
+  annotate(
+    "text",
+    x = max(df_bio$Biomass, na.rm = TRUE) * 0.55,
+    y = min(df_bio$pred2, na.rm = TRUE) +
+      0.1 * diff(range(df_bio$pred2, na.rm = TRUE)),
+    label = paste0(
+      "Marginal R² = ", round(r2_vals2$R2_marginal, 3), "\n",
+      "Conditional R² = ", round(r2_vals2$R2_conditional, 3), "\n",
+      "Biomass = -0.4251 + 10.2478*SAVI", "\n",
+      " + 14.6189*NDRE - 16.6567*NDVI"
+    ),
+    hjust = 0,
+    size = 9
+  ) +
+  theme(
+    axis.title.x = element_text(size = 28, color = "black"),
+    axis.title.y = element_text(size = 28, color = "black"),
+    axis.text.x = element_text(size = 28, color = "black"),
+    axis.text.y = element_text(size = 28, color = "black")
+  )
+
+lin_bio_plot
+
+ggsave(
+  filename = "../output/lin_bio_plot.png",
+  plot = lin_bio_plot,
+  dpi = 600,
+  height = 15,
+  width = 15
+)
+```
+
 
 ```{r}
 linmod <- lmer(Yield ~ SAVI + NDRE + Elevation + (1|Rep),
@@ -113,10 +256,7 @@ summary(linmod)
 ```{r}
 # R²
 r2_vals <- r2(linmod)
-
-# RMSE (with random effects)
-
-# RMSE (fixed effects only)
+r2_vals
 ```
 
 ```{r}
@@ -147,7 +287,6 @@ lin_reg <- ggplot(df, aes(x = Yield, y = pred)) +
     hjust = 0,
     size = 9
   ) +
-  theme_minimal() +
   theme(
     axis.title = element_blank(),
     axis.title.x = element_text(size = 28, color = "black"),
@@ -156,11 +295,13 @@ lin_reg <- ggplot(df, aes(x = Yield, y = pred)) +
     axis.text.y = element_text(size = 28, color = "black")
   )
 
-# ggsave(filename = "../output/lin_reg.png",
-#        lin_reg,
-#        dpi = 600,
-#        height = 14,
-#        width = 19)
+lin_reg
+
+ggsave(filename = "../output/lin_reg.png",
+       lin_reg,
+       dpi = 600,
+       height = 14,
+       width = 19)
 ```
 
 
