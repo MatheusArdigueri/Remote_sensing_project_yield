@@ -36,7 +36,7 @@ df
 
 ```{r}
 df_long <- df %>%
-  pivot_longer(c(NDVI, SAVI),
+  pivot_longer(c(NDVI, SAVI, NDRE),
                names_to = "indices",
                values_to = "values")
 
@@ -55,7 +55,7 @@ indices <- ggplot(data =  df_long,
 
 indices
 
-ggsave(filename = "../output/boxplot_eda.png",
+ggsave(filename = "../output/boxplot_upd_eda.png",
        plot = indices,
        dpi = 600)
 ```
@@ -86,7 +86,7 @@ boxplot_final <- ggplot(data = df_group,
   )
 
 ggsave(
-  filename = "../output/boxplot_final.png",
+  filename = "../output/boxplot_final2.png",
   plot = boxplot_final,
   dpi = 600,
   height = 15,
@@ -95,10 +95,15 @@ ggsave(
 
 
 ```
+```{r}
+plot_elevation <- ggplot(df
+                         ) +
+  geom_
+```
 
 
 ```{r}
-linmod <- lmer(Yield ~ NDVI + SAVI + Elevation + (1|Rep),
+linmod <- lmer(Yield ~ SAVI + NDRE + Elevation + (1|Rep),
                data = df)
 
 summary(linmod)
@@ -112,7 +117,6 @@ r2_vals <- r2(linmod)
 # RMSE (with random effects)
 
 # RMSE (fixed effects only)
-rmse(df$Yield, predict(linmod, re.form = NA))
 ```
 
 ```{r}
@@ -152,11 +156,11 @@ lin_reg <- ggplot(df, aes(x = Yield, y = pred)) +
     axis.text.y = element_text(size = 28, color = "black")
   )
 
-ggsave(filename = "../output/lin_reg.png",
-       lin_reg,
-       dpi = 600,
-       height = 14,
-       width = 19)
+# ggsave(filename = "../output/lin_reg.png",
+#        lin_reg,
+#        dpi = 600,
+#        height = 14,
+#        width = 19)
 ```
 
 
