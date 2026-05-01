@@ -55,9 +55,9 @@ indices <- ggplot(data =  df_long,
 
 indices
 
-ggsave(filename = "../output/boxplot_upd_eda.png",
-       plot = indices,
-       dpi = 600)
+# ggsave(filename = "../output/boxplot_upd_eda.png",
+#        plot = indices,
+#        dpi = 600)
 ```
 
 ```{r}
@@ -84,11 +84,13 @@ temp <- ggplot(vi_summary, aes(x = Date, y = mean_value, color = Ntreat, group =
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggsave(filename="../output/temp_anal.png",
-       plot = temp,
-       dpi = 600,
-       height = 8,
-       width = 8)
+temp
+
+# ggsave(filename="../output/temp_anal.png",
+#        plot = temp,
+#        dpi = 600,
+#        height = 8,
+#        width = 8)
 ```
 
 ```{r}
@@ -116,13 +118,13 @@ biomass <- ggplot(df,
 
 biomass
 
-ggsave(
-  filename = "../output/biomass.png",
-  plot = biomass,
-  dpi = 600,
-  height = 15,
-  width = 15
-)
+# ggsave(
+#   filename = "../output/biomass.png",
+#   plot = biomass,
+#   dpi = 600,
+#   height = 15,
+#   width = 15
+# )
 
 ```
 
@@ -146,13 +148,20 @@ boxplot_final <- ggplot(data = df_group,
   theme(
     axis.title.x =  element_text(color = "black", size = 28),
     axis.title.y =  element_text(color = "black", size = 28),
-    axis.text.x =  element_text(color = "black", size = 28),
+    axis.text.x = element_text(
+  color = "black",
+  size = 24,
+  angle = 45,
+  margin = margin(t = 10)  # adds space above the text
+),
     axis.text.y =  element_text(color = "black", size = 28),
     strip.text = element_text(color ="black", size = 28)
   )
 
+boxplot_final
+
 ggsave(
-  filename = "../output/boxplot_final2.png",
+  filename = "../output/boxplot_final3.png",
   plot = boxplot_final,
   dpi = 600,
   height = 15,
@@ -161,13 +170,11 @@ ggsave(
 
 
 ```
-```{r}
-plot_elevation <- ggplot(df
-                         ) +
-  geom_
-```
 
 ```{r}
+df <- df %>%
+  mutate(Rep = as.factor(Rep))
+
 lin_bio <- lmer(Biomass ~ SAVI + NDRE + NDVI + (1|Rep),
                 data = df)
 
@@ -177,6 +184,8 @@ r2_vals2 <- r2(lin_bio)
 
 r2_vals2
 ```
+
+
 ```{r}
 df_bio <- df %>%
   drop_na(Biomass, SAVI, NDRE, NDVI, Rep)
@@ -246,17 +255,18 @@ ggsave(
 
 
 ```{r}
-linmod <- lmer(Yield ~ SAVI + NDRE + Elevation + (1|Rep),
+linmod <- lmer(Yield ~ SAVI + NDRE + NDVI + Elevation + (1|Rep),
                data = df)
 
 summary(linmod)
+r2_vals <- r2(linmod)
+r2_vals
 ```
 
 
 ```{r}
 # R²
-r2_vals <- r2(linmod)
-r2_vals
+
 ```
 
 ```{r}
@@ -297,11 +307,11 @@ lin_reg <- ggplot(df, aes(x = Yield, y = pred)) +
 
 lin_reg
 
-ggsave(filename = "../output/lin_reg.png",
-       lin_reg,
-       dpi = 600,
-       height = 14,
-       width = 19)
+ggsave(
+  filename = "../output/lin_reg.png",
+  plot = lin_reg,
+  dpi = 600,
+  height = 15,
+  width = 18
+)
 ```
-
-
